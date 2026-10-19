@@ -1,0 +1,36 @@
+ostf: "0.1"
+document: {id: SRS, title: zzhealth software requirements, kind: srs}
+items:
+  - id: R-CONFIG
+    title: Configure monitored services
+    status: draft
+    section: 1 Target configuration
+    text: The monitor shall read one to twelve uniquely identified HTTP or HTTPS targets from server configuration, reject malformed entries and credential-bearing URLs before probing, and use three local demo services when targets are absent.
+    code: [src/lib/config.ts#readConfig, src/lib/config.ts#targetUrl]
+    tests: [test/config.test.ts#target configuration]
+  - id: R-CHECK
+    title: Classify service health
+    status: draft
+    section: 2 HTTP observations
+    text: Each check shall classify a 2xx response received below 200 milliseconds as healthy, a 2xx response at or above 200 milliseconds as slow, and other responses or connection failures as down. It shall report latency to headers and the HTTP status when available, without consuming response bodies.
+    code: [src/lib/health.ts#checkTarget, src/lib/health.ts#SLOW_MS]
+    tests:
+      - test/health.test.ts#HTTP checks > reports a successful response as healthy
+      - test/health.test.ts#HTTP checks > reports a slow successful response separately from an outage
+      - test/health.test.ts#HTTP checks > reports failed HTTP responses as down
+      - test/health.test.ts#HTTP checks > classifies headers without waiting for response bodies
+      - test/health.test.ts#HTTP checks > reports connection failures without exposing the target query
+  - id: R-TIMEOUT
+    title: Bound network waits
+    status: draft
+    section: 2 HTTP observations
+    text: The monitor shall check configured services concurrently, classify an unresponsive request as down after two seconds, and retain the other services' results with a completion timestamp.
+    code: [src/lib/health.ts#checkTarget, src/lib/health.ts#checkServices, src/lib/health.ts#TIMEOUT_MS]
+    tests: [test/health.test.ts#HTTP checks > bounds unresponsive requests and retains other service results]
+  - id: R-REDIRECT
+    title: Keep probes on configured targets
+    status: draft
+    section: 2 HTTP observations
+    text: A probe shall not follow an HTTP redirect. A redirect response shall be reported as down with its original HTTP status.
+    code: [src/lib/health.ts#checkTarget]
+    tests: [test/health.test.ts#HTTP checks > does not follow redirects outside the configured endpoint]

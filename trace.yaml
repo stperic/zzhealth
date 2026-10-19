@@ -1,0 +1,11 @@
+ostf: "0.1"
+profile: default
+include: [trace/requirements.yaml]
+policy:
+  owners: [maintainers]
+  groups:
+    maintainers: ["@stperic"]
+  locks:
+    - item: R-CHECK
+      owners: [maintainers]
+      reason: Review changes to the meaning of service health.

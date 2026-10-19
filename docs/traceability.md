@@ -1,10 +1,10 @@
 # Traceability workflow
 
-zzhealth uses released zztrace v0.1.0 for its first everyday workflow. Requirements and exact TypeScript/Vitest links live in `trace/requirements.yaml`; `trace.yaml` names the policy and `trace.lock` records inspected links. Four initial draft requirements cover configuration, health classification, timeouts and redirects. Playwright supplies separate browser checks; its identities are not interpreted as Vitest tests.
+zzhealth starts with released zztrace v0.1.0 and uses v0.1.1 for graph evidence capture with normal Next.js dependency and build directories. Requirements and exact TypeScript/Vitest links live in `trace/requirements.yaml`; `trace.yaml` names the policy and `trace.lock` records inspected links. Four initial draft requirements cover configuration, health classification, timeouts and redirects. Playwright supplies separate browser checks; its identities are not interpreted as Vitest tests.
 
 ## Install once
 
-Use the authenticated [zztrace v0.1.0 installation guide](https://github.com/stperic/zztrace/blob/v0.1.0/docs/installation.md). The repository and release downloads are private. Sign in with an account that can read `stperic/zztrace`; verify the exact release's Sigstore checksum manifest and archive before executing its installer. Choose the project-local prefix `$PWD/.tools/zztrace`, or use an existing verified installation.
+Use the authenticated [zztrace installation guide](https://github.com/stperic/zztrace/blob/v0.1.1/docs/installation.md), selecting exact version `0.1.1`. The repository and release downloads are private. Sign in with an account that can read `stperic/zztrace`; verify the exact release's Sigstore checksum manifest and archive before executing its installer. Choose the project-local prefix `$PWD/.tools/zztrace`, or use an existing verified installation.
 
 The released `zztrace-install` already uses `common` for verification, extraction, staging and activation. This project adds no installer implementation, Go dependency or sibling source requirement. npm installs the web application using its lockfile. `.tools/` and `.zztrace/` are ignored and must not be committed.
 
@@ -36,9 +36,9 @@ Run all commands suggested by `scope` or `impact` as well as full verification. 
 
 ## Capture evidence
 
-Qualification is still in progress: zztrace v0.1.0 rejects installed `node_modules` and generated `.next` files as extra source, and `graph record` does not yet expose the source-scope declaration supported by `ci report`. The normal application layout remains unchanged. Do not move dependencies behind an ignored-directory symlink to claim this check passed. The recording sequence below is the intended workflow once this boundary is resolved, not a currently qualified Next.js capture recipe.
+Use zztrace v0.1.1 or later for the following sequence. Version 0.1.0 rejects installed `node_modules` and generated `.next` source during graph recording. The `sourceScope` below declares application source while leaving those ignored directories outside the boundary. All tracked bytes still have to match the captured tree, and untracked source is rejected. The declaration is retained in the evidence; it does not attest installed dependencies or the runner. Keep the normal application layout.
 
-After committing, keep the checkout unchanged while running and recording tests:
+After committing, keep the checkout unchanged while running and recording tests. Run `npm ci` and the development guide's verification steps first. Use a new authority database for a fresh trial and choose an unused tag name:
 
 ```sh
 zztrace --db .zztrace/authority.sqlite init
@@ -49,19 +49,19 @@ npm run test:evidence
 Use the returned graph snapshot ID to create `.zztrace/run.json`:
 
 ```json
-{"graphSnapshotId":"GRAPH_ID","repository":".","runId":"initial","format":"junit","configuration":{"command":"npm run test:evidence"}}
+{"graphSnapshotId":"GRAPH_ID","repository":".","runId":"initial","format":"junit","configuration":{"command":"npm run test:evidence","runner":"vitest 4.1.12"},"sourceScope":{"schemaVersion":1,"expectedPaths":["next.config.ts","playwright.config.ts","vitest.config.ts"],"includeGlobs":["src/**","test/**","e2e/**"]}}
 ```
 
 ```sh
 zztrace graph record --file .zztrace/run.json --report .zztrace/unit.xml --actor agent --request-key initial-results
 zztrace graph status --id GRAPH_ID
-git tag trace-start
+git tag trace-local-start
 ```
 
 Create `.zztrace/baseline.json` with that snapshot ID:
 
 ```json
-{"graphSnapshotId":"GRAPH_ID","repository":".","tag":"trace-start","product":"zzhealth","module":"monitor","variant":"default"}
+{"graphSnapshotId":"GRAPH_ID","repository":".","tag":"trace-local-start","product":"zzhealth","module":"monitor","variant":"default"}
 ```
 
 ```sh
@@ -85,4 +85,4 @@ Required checks are `test` and `zztrace/policy`. Enable the `ZZTRACE_REQUIRED_CH
 
 ## Qualification status
 
-The local starter and trace setup are being qualified. Hosted PR enforcement, the ordinary-change review and final reproducible baseline remain pending. A workflow file or a local passing policy preview alone does not prove an enforced merge gate.
+The starter has fourteen unit tests and six desktop/mobile browser cases. `main` requires passing `test` and `zztrace/policy` checks and one current PR approval, including for administrators. The first ordinary integration change is [PR 1](https://github.com/stperic/zzhealth/pull/1). Its review and evidence receipts distinguish delegated agent judgment from independent human usability. The trace graph covers four probe requirements; six UI and route functions remain outside its links, with separate browser coverage.

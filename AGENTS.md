@@ -2,7 +2,7 @@
 
 This is a small Next.js software health monitor and the owner-selected everyday sample for zztrace. Keep it easy to run from a fresh checkout. Read README.md and docs/development.md first. Keep target URLs in trusted server configuration; never accept a browser-supplied probe destination.
 
-Use the released zztrace v0.1.0 tools on PATH, with the project root as the MCP working directory. `.mcp.json` registers the trace server. `trace.yaml` and `trace/requirements.yaml` are the source of truth for the linked probe requirements. They remain drafts until their review is recorded. Browser coverage is retained separately in Playwright; the released trace runner supports Vitest/Jest identities, not Playwright commands.
+Use released zztrace v0.1.1 tools on PATH for evidence capture, with the project root as the MCP working directory. `.mcp.json` registers the trace server. `trace.yaml` and `trace/requirements.yaml` are the source of truth for the linked probe requirements. They remain drafts until their review is recorded. Browser coverage is retained separately in Playwright; the released trace runner supports Vitest/Jest identities, not Playwright commands.
 
 Before a change, use `zztrace-trace find`, `scope`, `code` and `policy --base main` to understand the affected items and owners. For new behavior propose its requirement change first. After editing, use `impact --base main --scope ID`, run its suggested tests and `npm run verify`, recheck and stamp affected links, and run `check`. Never edit trace.lock by hand. Include code, tests, requirement revisions and stamps in the same focused commit.
 

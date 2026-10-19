@@ -13,7 +13,7 @@
 		"lint": "biome check .",
 		"check": "next typegen && tsc --noEmit",
 		"test": "vitest run",
-		"test:evidence": "vitest run --reporter=default --reporter=junit --outputFile.junit=.zztrace/unit.xml",
+		"test:evidence": "vitest run",
 		"test:e2e": "playwright test",
 		"verify": "npm run check && npm run lint && npm test && npm run build && npm run test:e2e",
 		"trace:check": "zztrace-trace check",
@@ -31,6 +31,6 @@
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"typescript": "^5",
-		"vitest": "5.0.5"
+		"vitest": "4.1.12"
 	}
 }

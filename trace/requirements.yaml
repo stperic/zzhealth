@@ -7,7 +7,14 @@ items:
     section: 1 Target configuration
     text: The monitor shall read one to twelve uniquely identified HTTP or HTTPS targets from server configuration, reject malformed entries and credential-bearing URLs before probing, and use three local demo services when targets are absent.
     code: [src/lib/config.ts#readConfig, src/lib/config.ts#targetUrl]
-    tests: [test/config.test.ts#target configuration]
+    tests:
+      - test/config.test.ts#target configuration > uses three local demo services when no targets are configured
+      - test/config.test.ts#target configuration > loads operator targets without substituting demo data
+      - test/config.test.ts#target configuration > rejects malformed and empty configuration
+      - test/config.test.ts#target configuration > bounds target count and rejects duplicate identities
+      - test/config.test.ts#target configuration > rejects unsupported URLs and credentials without echoing secrets
+      - test/config.test.ts#target configuration > rejects misspelled fields and missing names
+      - test/config.test.ts#target configuration > requires a bare demo origin
   - id: R-CHECK
     title: Classify service health
     status: draft

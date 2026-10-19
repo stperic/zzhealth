@@ -4,6 +4,7 @@ export default defineConfig({
 	test: {
 		environment: "node",
 		include: ["test/**/*.test.ts"],
-		reporters: ["default"],
+		reporters: ["default", ["junit", { addFileAttribute: true }]],
+		outputFile: { junit: ".zztrace/unit.xml" },
 	},
 });

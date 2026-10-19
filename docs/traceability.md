@@ -36,6 +36,8 @@ Run all commands suggested by `scope` or `impact` as well as full verification. 
 
 ## Capture evidence
 
+Qualification is still in progress: zztrace v0.1.0 rejects installed `node_modules` and generated `.next` files as extra source, and `graph record` does not yet expose the source-scope declaration supported by `ci report`. The normal application layout remains unchanged. Do not move dependencies behind an ignored-directory symlink to claim this check passed. The recording sequence below is the intended workflow once this boundary is resolved, not a currently qualified Next.js capture recipe.
+
 After committing, keep the checkout unchanged while running and recording tests:
 
 ```sh

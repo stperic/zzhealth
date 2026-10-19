@@ -73,6 +73,14 @@ The tag establishes a history boundary, not retrospective review. Use fresh requ
 
 Generate requirements and the matrix with the released tools and their authenticated Word templates. Review the actual documents and retain the judgment. Owner-authorized Codex reviews must be labelled delegated; agent time is not human usability evidence.
 
+## Hosted review checks
+
+The owner authorized publishing this sample and a standalone Linux CI checker; common and zztrace source repositories and full releases remain private. The `checker-v0.1.0` release contains only the compiled checker and required license notices. It was extracted from the authenticated zztrace v0.1.0 Linux archive. The policy workflow pins the checker SHA-256; it reads candidate source without executing the application. The separate read-only CI job executes the application tests.
+
+`Trace policy` runs from the trusted default branch for PR updates. After a review is submitted or dismissed, dispatch that workflow on `main` with the PR number to refresh its decision. Its bounded `open_trial=runner` input opens the prepared integration change as the Actions bot, so the owner account can submit a delegated review with explicit provenance. Because bot-created PRs do not trigger other workflows, dispatch `CI` on the candidate branch and `Trace policy` on `main` after opening it.
+
+Required checks are `test` and `zztrace/policy`. Enable the `ZZTRACE_REQUIRED_CHECK` repository variable only after verifying main's required-check protection. A changed head requires new tests and a fresh review; local approval flags never replace forge evidence.
+
 ## Qualification status
 
 The local starter and trace setup are being qualified. Hosted PR enforcement, the ordinary-change review and final reproducible baseline remain pending. A workflow file or a local passing policy preview alone does not prove an enforced merge gate.

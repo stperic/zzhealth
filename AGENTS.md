@@ -8,7 +8,7 @@ Before a change, use `zztrace-trace find`, `scope`, `code` and `policy --base ma
 
 An approve decision requires the named owners at merge; deny stops the change. Local CLI approval flags are not forge review evidence. Capture real test results and review provenance as documented in docs/traceability.md. Never invent a human review, passing test or enforced GitHub rule. Additional input formats, connectors and protection changes remain outside this goal.
 
-Keep the repository private unless the owner authorizes publication. Avoid em dashes in user-facing strings and documentation. Run `npm run verify` before each commit. Use the existing common-backed zztrace installer and npm's lockfile; do not build another installer or introduce Go into this application.
+The owner authorized this sample and its pinned CI checker to be public. Keep common and zztrace source repositories and full releases private. Avoid em dashes in user-facing strings and documentation. Run `npm run verify` before each commit. Use the existing common-backed zztrace installer and npm's lockfile; do not build another installer or introduce Go into this application.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

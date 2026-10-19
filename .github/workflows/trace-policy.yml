@@ -1,0 +1,111 @@
+name: Trace policy
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number to evaluate
+        type: string
+        required: false
+      open_trial:
+        description: Open a prepared candidate as the Actions bot
+        type: choice
+        options: [none, runner]
+        default: none
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  open-trial:
+    if: github.event_name == 'workflow_dispatch' && inputs.open_trial != 'none'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Open a prepared candidate for owner review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TRIAL: ${{ inputs.open_trial }}
+        run: |
+          case "$TRIAL" in
+            runner)
+              branch=work/trace-runner-compatibility
+              title='Keep Vitest execution and JUnit evidence aligned with trace links'
+              body='Real integration fix prepared by Codex: pin the qualified Vitest 4 runner, emit JUnit file identities and link configuration cases individually. Vitest 5 selected zero tests for the released scoped command; default JUnit omitted file identities. Review provenance must identify owner-authorized delegated review. See docs/traceability.md.'
+              ;;
+            *) exit 1 ;;
+          esac
+          gh api --method POST "repos/$REPOSITORY/pulls" \
+            -f base=main -f "head=$branch" -f "title=$title" -f "body=$body"
+
+  policy:
+    if: github.event_name != 'workflow_dispatch' || inputs.pr != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    concurrency:
+      group: trace-policy-${{ github.event.pull_request.number || inputs.pr }}
+      cancel-in-progress: true
+    steps:
+      - name: Read PR coordinates and mark the check pending
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr }}
+        run: |
+          [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]
+          gh api "repos/$REPOSITORY/pulls/$PR_NUMBER" > "$RUNNER_TEMP/pr.json"
+          head=$(jq -er '.head.sha' "$RUNNER_TEMP/pr.json")
+          [[ "$head" =~ ^[0-9a-f]{40}$ ]]
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+          gh api --method POST "repos/$REPOSITORY/statuses/$head" \
+            -f state=pending -f context=zztrace/policy \
+            -f description='Evaluating trace policy and current reviews'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ steps.pr.outputs.head }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Load the pinned checker
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          gh release download checker-v0.1.0 --repo "$REPOSITORY" \
+            --pattern zztrace-trace-linux-amd64 --dir "$RUNNER_TEMP"
+          printf '%s  %s\n' 'e36dab42f6ee274e62e6d603379e3190daa4d2bac4ca7f27fb4273de6a74628c' "$RUNNER_TEMP/zztrace-trace-linux-amd64" | sha256sum --check -
+          chmod +x "$RUNNER_TEMP/zztrace-trace-linux-amd64"
+      - name: Evaluate the committed graph and GitHub approvals
+        id: policy
+        env:
+          CI: ${{ vars.ZZTRACE_REQUIRED_CHECK || 'false' }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr }}
+        run: |
+          "$RUNNER_TEMP/zztrace-trace-linux-amd64" policy \
+            --github "$REPOSITORY" --pr "$PR_NUMBER" > "$RUNNER_TEMP/policy.json"
+      - name: Publish the required status
+        if: always() && steps.pr.outputs.head != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          HEAD_COMMIT: ${{ steps.pr.outputs.head }}
+          POLICY_OUTCOME: ${{ steps.policy.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          state=failure
+          if [ "$POLICY_OUTCOME" = success ]; then state=success; fi
+          if [ -f "$RUNNER_TEMP/policy.json" ]; then cat "$RUNNER_TEMP/policy.json"; fi
+          gh api --method POST "repos/$REPOSITORY/statuses/$HEAD_COMMIT" \
+            -f "state=$state" -f context=zztrace/policy \
+            -f description='Trace policy and committed graph check' -f "target_url=$RUN_URL"
